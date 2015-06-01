@@ -26,13 +26,16 @@ function [px, f] = erbplot2(wav,sr,plot_excitation,varargin)
 % at the beginning of the response, onset_buffer specifies the amount of the response to exclude in
 % seconds (default: 0)
 % 
-% middle_ear_attenuation: whether or not to apply middle ear attenutation (default: false)
-% 
 % tf (typically not relevant): transforms the excitation pattern using an arbitrary transfer
 % function. The frequencies (tf.f) and output power (tf.px) of the spectrum are specified as fields
 % of the input structure 'tf'.
 % 
-% All optional inputs are specified in the form: ... , 'variable_name', variable_value, ...
+% middle_ear_attenuation: whether or not to apply middle ear attenutation (default: false)
+% 
+% The optional inputs fmin, nfilts, onset_buffer, and tf are specified in the form: ... ,
+% 'variable_name', variable_value, ...
+% 
+% middle_ear_attenuation is just specified as an extra flag, e.g.  ..., 'middle_ear_attenuation', ...
 % 
 % -- Example: 1 kHz pure tone --
 % 
