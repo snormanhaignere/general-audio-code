@@ -73,8 +73,8 @@ if optInputs(varargin, 'noplot')
 end
 
 % plot spectrum level
-bin_width_in_Hz = sr/nfft;
-semilogx(f(:),10*log10((1/bin_width_in_Hz)*px_one_sided), 'k','LineWidth',1);
+% bin_width_in_Hz = sr/nfft;
+semilogx(f(:),10*log10(px_one_sided), 'k','LineWidth',1);
 % set(gca,'XTick',logspace(1,4,4),'FontWeight',fontweight,'FontSize',fontsize);
 % xlim([20 10000]);
 if optInputs(varargin, 'tf')

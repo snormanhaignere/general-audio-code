@@ -1,0 +1,61 @@
+function [subband_envs, f, t, env_sr] = gammatone_envelopes(wav,sr,plot_gammatone,varargin)
+
+% function [subband_envs, f, t, env_sr] = gammatone_envelopes(wav,sr,plot_gammatone,varargin)
+% 
+% Calculates subband envelopes using a bank of gammatone filters as implemented by Slaney (1998).
+% 
+% 
+
+% add path to slaney filters
+addpath(strrep(which('gammatone_envelopes.m'),'gammatone_envelopes.m','gammatonegram/'));
+
+env_sr = 400; % envelope sampling rate
+if optInputs(varargin, 'env_sr')
+    env_sr = varargin{optInputs(varargin, 'env_sr')+1};
+end
+
+% gammatone parameters
+n_freqs = 128; % number of ERB-spaced samples
+lowfreq = 100; % lowest gammatone frequency
+compression_type = 'power';
+compression_factor = 0.3; % power subband envelopes are raised to if power-law compression is used
+
+[fcoefs, F] = MakeERBFilters(sr,n_freqs,lowfreq);
+subbands = ERBFilterBank(wav,flipud(fcoefs))';
+subband_envs = abs(hilbert(subbands));
+
+switch compression_type
+    case {'log'}
+        subband_envs = 20*log10(subband_envs);
+    case {'power'}
+        subband_envs = subband_envs.^ compression_factor;
+    case {'none'}
+    otherwise
+        error('Error in gammatone_envelopes.m: compression_type must be ''power'', ''log'', or ''none''');
+end
+        
+% downsample
+subband_envs = resample(subband_envs, env_sr, sr);
+
+% truncate if power-law compression used
+if strcmp(compression_type,'power')
+    subband_envs(subband_envs<0)=0;
+end
+
+f = flipud(F);
+t = (1:size(subband_envs,1))'/env_sr;
+
+if plot_gammatone
+    %     figure;
+    fontweight = 'Demi';
+    fontsize = 14;
+    set(gca,'FontWeight',fontweight,'FontSize',fontsize);
+    imagesc(flipud(subband_envs'),[0 0.5]);
+    set(gcf, 'PaperPosition', [0 0 12 8]);
+    set(gca,'YTick',fliplr(length(f):-10:1))
+    set(gca,'YTickLabel',flipud(round(f(1:10:length(f)))),'FontWeight',fontweight,'FontSize',fontsize);
+    ylabel('Frequency (Hz)');
+    set(gca,'XTick',env_sr:env_sr:length(t));
+    set(gca,'XTickLabel',round(t(env_sr:env_sr:length(t))),'FontWeight',fontweight,'FontSize',fontsize);
+    xlabel('Time (sec)');
+end
