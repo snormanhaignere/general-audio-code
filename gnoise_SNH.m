@@ -86,7 +86,7 @@ if optInputs(varargin, 'ten')
         10.0000   -3.0000
         15.0000   -3.0000];
     
-    K_interp = myinterp1(log2(K(:,1)*1000),K(:,2),log2(freqs(lpbin:hpbin)),'cubic');
+    K_interp = myinterp1(log2(K(:,1)*1000),K(:,2),log2(freqs(lpbin:hpbin)),'pchip');
     erb = 24.7*(4.37*freqs(lpbin:hpbin)/1000 + 1);
     atten_all(lpbin:hpbin) = atten_all(lpbin:hpbin) - 10*log10(erb) - K_interp; % assumes signal is at 0 dB
 
@@ -98,7 +98,7 @@ atten_all(attenbin:hpbin) = atten_all(attenbin:hpbin) + spec_atten*log2(attenbin
 % additional spectral filtering
 if optInputs(varargin, 'specfilt')
     sf = varargin{optInputs(varargin,'specfilt')+1};
-    atten_all(lpbin:hpbin) = atten_all(lpbin:hpbin) + myinterp1(log2(sf.f), sf.px, log2(freqs(lpbin:hpbin)), 'cubic');
+    atten_all(lpbin:hpbin) = atten_all(lpbin:hpbin) + myinterp1(log2(sf.f), sf.px, log2(freqs(lpbin:hpbin)), 'pchip');
 end
 
 % fix power outside passband to the border of passband
@@ -125,7 +125,7 @@ end
 % inverts system response
 if optInputs(varargin,'tf')
     tf = varargin{optInputs(varargin,'tf')+1};
-    atten_all(2:end) = atten_all(2:end) - myinterp1(log2(tf.f), tf.px, log2(freqs(2:end)), 'cubic');
+    atten_all(2:end) = atten_all(2:end) - myinterp1(log2(tf.f), tf.px, log2(freqs(2:end)), 'pchip');
 end
 
 % gaussian noise with 0.5 power/Hz, or 1 power/Hz when collapsed across positive and negative frequencies

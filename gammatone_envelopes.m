@@ -1,6 +1,6 @@
 function [subband_envs, cfs, t] = gammatone_envelopes(wav,sr,plot_envelopes,varargin)
 
-% function [subband_envs, f, t, env_sr] = gammatone_envelopes(wav,sr,plot_envelopes,varargin)
+% function [subband_envs, cfs, t] = gammatone_envelopes(wav,sr,plot_envelopes,varargin)
 % 
 % Calculates subband envelopes using a bank of gammatone filters as implemented by Slaney (1998).
 % Envelopes are computed using the hilbert transform, and (optionally) compressed using a power-law
@@ -23,6 +23,10 @@ function [subband_envs, cfs, t] = gammatone_envelopes(wav,sr,plot_envelopes,vara
 % t: time-points corresponding to the sampled envelopes
 % 
 % -- Optional Inputs --
+% 
+% fmin: cf of the lowest-frequency filter (default: 50)
+% 
+% nfilts: number of filters between fmin and the nyquist; has no affect on bandwidth (default: 256)
 % 
 % env_sr: The envelope sampling rate (default: 400 Hz)
 % 
@@ -47,17 +51,20 @@ compression_exponent = 0.3; % power subband envelopes are raised to if power-law
 if optInputs(varargin, 'compression_factor')
     compression_exponent = varargin{optInputs(varargin, 'compression_factor')+1};
 end
-
-% gammatone parameters
-n_freqs = 128; % number of ERB-spaced samples
-lowfreq = 100; % lowest gammatone frequency
+nfilts = 128; % number of ERB-spaced samples
+if optInputs(varargin, 'nfilts')
+    nfilts = varargin{optInputs(varargin, 'nfilts')+1};
+end
+fmin = 100; % lowest gammatone frequency
+if optInputs(varargin, 'fmin')
+    fmin = varargin{optInputs(varargin, 'fmin')+1};
+end
 
 % calculate the envelopes
-[fcoefs, F] = MakeERBFilters(sr,n_freqs,lowfreq);
+[fcoefs, F] = MakeERBFilters(sr,nfilts,fmin);
 cfs = flipud(F);
 subbands = ERBFilterBank(wav,flipud(fcoefs))';
 subband_envs = abs(hilbert(subbands));
-t = (1:size(subband_envs,1))'/env_sr;
 
 % compression
 switch compression_type
@@ -73,23 +80,41 @@ end
 % downsample
 subband_envs = resample(subband_envs, env_sr, sr);
 
+% time samples
+t = (0:size(subband_envs,1)-1)'/env_sr;
+
 % truncate, only relevant if power-law compression used
 if strcmp(compression_type,'power')
     subband_envs(subband_envs<0)=0;
 end
 
+if optInputs(varargin, 'logf')
+    
+    log_cfs = logspace(log10(cfs(1)), log10(cfs(end)),length(cfs));
+    
+    subband_envs_log_cfs = nan(size(subband_envs));
+    for i = 1:size(subband_envs,1)
+        subband_envs_log_cfs(i,:) = interp1(log2(cfs), subband_envs(i,:)', log2(log_cfs));
+    end
+    
+    cfs = log_cfs';
+    subband_envs = subband_envs_log_cfs;
+end
+
 % plot
 if plot_envelopes
+    
     %     figure;
-    fontweight = 'Demi';
-    fontsize = 14;
-    set(gca,'FontWeight',fontweight,'FontSize',fontsize);
-    imagesc(flipud(subband_envs'),[0 0.5]);
-    set(gcf, 'PaperPosition', [0 0 12 8]);
-    set(gca,'YTick',fliplr(length(cfs):-10:1))
-    set(gca,'YTickLabel',flipud(round(cfs(1:10:length(cfs)))),'FontWeight',fontweight,'FontSize',fontsize);
+    imagesc(flipud(subband_envs'));
+    set(gca,'FontName','Helvetica','FontSize',16);
+    
+    % frequency axis
+    fticks = round( myinterp1(flipud(cfs), (1:length(cfs))', [200 400 800 1600 3200 6400]'));
+    set(gca, 'YTick', flipud(fticks), 'YTickLabel', flipud([200 400 800 1600 3200 6400]'));
     ylabel('Frequency (Hz)');
+    
+    % time axis
     set(gca,'XTick',env_sr:env_sr:length(t));
-    set(gca,'XTickLabel',round(t(env_sr:env_sr:length(t))),'FontWeight',fontweight,'FontSize',fontsize);
+    set(gca,'XTickLabel',round(t(env_sr:env_sr:length(t))));
     xlabel('Time (sec)');
 end

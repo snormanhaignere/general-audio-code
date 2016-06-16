@@ -67,7 +67,7 @@ end
 % optionally inverts system response
 if optInputs(varargin,'tf')
     tf = varargin{optInputs(varargin,'tf')+1};  
-    pf = pf - myinterp1(log2(tf.f), tf.px, log2(f), 'cubic');
+    pf = pf - myinterp1(log2(tf.f), tf.px, log2(f), 'pchip');
 end
 
 % create the complex

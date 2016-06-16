@@ -64,7 +64,7 @@ f = sr*(0:max_pos_freq-1)/nfft;
 % add transfer function if specified
 if optInputs(varargin,'tf');
     tf = varargin{optInputs(varargin, 'tf')+1};
-    gain = myinterp1(log2(tf.f), tf.px, log2(f(2:end)), 'cubic')';
+    gain = myinterp1(log2(tf.f), tf.px, log2(f(2:end)), 'pchip')';
     px_one_sided(2:end) = px_one_sided(2:end) .* 10.^(gain/10);
 end
 

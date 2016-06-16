@@ -58,6 +58,7 @@ if USEFFT == 0
 
   ncols = 1 + floor((size(XE,2)-nwin)/hopsamps);
 
+  
   Y = zeros(N,ncols);
 
 %  winmx = repmat(window,N,1);
