@@ -36,6 +36,7 @@ if size(wav,2) == 1;
     wav = wav';
 end
 
+% keyboard;
 % maximum positive frequency in samples, the nyquist if nfft is even
 % if nfft is 4, frequencies of the dft are 2*pi*[0, 1, 2, 3]/4
 % in which case the third sample is the nyquist
@@ -52,9 +53,15 @@ spec_onesided = spec_twosided(1:max_pos_freq);
 freqs = sr*(0:max_pos_freq-1)/nfft; % frequency vector
 inds = freqs > min(f) & freqs < max(f); % frequencies within the range specified
 pf_interp = interp1(log2(f),pf,log2(freqs(inds)),'pchip');
+
+%%
+
 spec_onesided_filtered = spec_onesided;
 spec_onesided_filtered(inds) = spec_onesided(inds) .* 10.^(pf_interp/20);
+% figure;
+% plot(20*log10(abs([spec_onesided', spec_onesided_filtered'])))
 
+%%
 % 3: recreate the negative frequencies
 if mod(nfft,2)==0 % if nyquist present
     spec_twosided_filtered = [spec_onesided_filtered, conj(spec_onesided_filtered(max_pos_freq-1:-1:2))];
